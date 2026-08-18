@@ -1,0 +1,10 @@
+# Per-machine and per-person, never shared. `settings.json` beside it is the workspace's
+# settings and is tracked; this one is whatever the person at this desk allowed today, and
+# committing it would apply one machine's answers to everybody else's.
+#
+# This is the whole reason the two files have different names. Claude Code reads both and
+# merges them, local winning, so the split is already the tool's -- it is only the tracking
+# decision that is ours.
+settings.local.json
+
+.DS_Store

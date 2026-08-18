@@ -1,0 +1,59 @@
+cff-version: 1.2.0
+message: "If you use this software, please cite it as below."
+title: ".claude: the agent configuration for the multiplayer-fabric workspace"
+abstract: >
+  Claude Code's workspace configuration, kept as a repo project checked out at
+  .claude/ rather than as a symlink or a file on one machine. Settings that decide
+  what an agent may do without asking are tracked, reviewed and visible to repo
+  status, so a widened permission arrives as a diff with a commit behind it. The
+  per-machine half stays untracked. The conventions it works alongside are in
+  infrastructure-logbook; this repository holds capability rather than convention.
+authors:
+  - family-names: Lee
+    given-names: "K. S. Ernest (iFire)"
+    email: ernest.lee@chibifire.com
+    orcid: "https://orcid.org/0000-0003-4570-1436"
+version: 0.1.0-dev.1
+date-released: "2026-08-17"
+license: MIT
+repository-code: "https://github.com/v-sekai-multiplayer-fabric/.claude"
+keywords:
+  - claude-code
+  - agent-configuration
+  - repo-manifest
+
+# Configuration for a tool, so what it is built on is the tool's format rather than
+# any code. There is nothing vendored and nothing linked.
+references:
+
+  - type: software
+    title: "Claude Code"
+    authors:
+      - name: Anthropic
+    url: "https://docs.claude.com/en/docs/claude-code"
+    notes: >
+      The agent this configures. It reads `.claude/settings.json` and merges
+      `settings.local.json` over it with local winning, which is why the two are
+      separate files and why only the first is tracked.
+
+  - type: software
+    title: "repo: a tool built on top of Git for managing many repositories"
+    authors:
+      - name: "The Android Open Source Project"
+    url: "https://gerrit.googlesource.com/git-repo"
+    notes: >
+      What puts this at `.claude/`. `_CheckLocalPath` bans only `.`, `..`, `.git` and
+      `.repo*` as path components, so a leading-dot path is legal and gets an ordinary
+      managed checkout with its gitdir under `.repo/projects/`.
+
+  - type: software
+    title: "infrastructure-logbook: the fabric's record of itself"
+    authors:
+      - family-names: Lee
+        given-names: "K. S. Ernest (iFire)"
+    url: "https://github.com/v-sekai-multiplayer-fabric/infrastructure-logbook"
+    notes: >
+      The other half. It holds the conventions and the gates; this holds what an agent
+      may do without asking. The settings lived there until they were split out, because
+      a symlink into it would have made one repository's permissions everybody's with
+      nothing able to see it.
