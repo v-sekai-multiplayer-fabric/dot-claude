@@ -310,12 +310,18 @@ def add(con, content, kind, entities):
         raise SystemExit(f"kind must be one of {KINDS}")
     rel = _read_relations()
     today = datetime.date.today().isoformat()
+    # Kinds and entities take the store's own first date rather than today's, because that is
+    # the date `verify` re-derives them from. Stamping them with today instead passes on the
+    # day the store is created -- when the two dates are the same -- and fails for every
+    # entity coined afterwards, which is a gate that only goes red on the second day of use.
+    # The name's hash is unaffected either way: only the 48-bit date prefix moved.
+    first = min((r["created"] for r in rel["memory"]), default=today)
     if kind not in {r["name"] for r in rel["kinds"]}:
-        rel["kinds"].append({"kind_id": tuple_id("kind", kind, today), "name": kind})
+        rel["kinds"].append({"kind_id": tuple_id("kind", kind, first), "name": kind})
     kid = {r["name"]: r["kind_id"] for r in rel["kinds"]}[kind]
     for e in entities:
         if e not in {r["name"] for r in rel["entities"]}:
-            rel["entities"].append({"entity_id": tuple_id("entity", e, today), "name": e})
+            rel["entities"].append({"entity_id": tuple_id("entity", e, first), "name": e})
     eid = {r["name"]: r["entity_id"] for r in rel["entities"]}
     mid = tuple_id("memory", content, today)
     rel["memory"].append({"memory_id": mid, "kind_id": kid, "content": content,
