@@ -57,3 +57,37 @@ references:
       may do without asking. The settings lived there until they were split out, because
       a symlink into it would have made one repository's permissions everybody's with
       nothing able to see it.
+
+  - type: software
+    title: "OpenUSD: Universal Scene Description"
+    authors:
+      - name: "Pixar Animation Studios"
+    year: 2026
+    license: Apache-2.0
+    url: "https://github.com/PixarAnimationStudios/OpenUSD"
+    notes: >
+      plugins/hrr-memory/memory/*.usda are typed dictionaries in canonical usda. The
+      system usdcat re-emits each layer and the bytes must match, which is what keeps a
+      hand-written emitter honest. Nothing here imports pxr, for the reason
+      openusd-fabric's codeless schemas already record: the ABI trap between Blender's,
+      Unity's and idtx-flow's bundled builds.
+
+  - type: article
+    title: >
+      Holographic Reduced Representations: Distributed Representation for
+      Cognitive Structures
+    authors:
+      - family-names: Plate
+        given-names: "Tony A."
+    year: 1995
+    journal: "IEEE Transactions on Neural Networks"
+    volume: 6
+    issue: 3
+    start: 623
+    end: 641
+    doi: "10.1109/72.377968"
+    notes: >
+      plugins/hrr-memory/scripts/hrr.py binds and bundles memory vectors by circular
+      convolution over a uint16 phase grid, so recall is nearest neighbour over meaning
+      rather than substring match. Byte-identical to tw_hrr.hpp, which is what
+      tests/test_hrr.py gates. Carried here with the code from infrastructure-logbook.

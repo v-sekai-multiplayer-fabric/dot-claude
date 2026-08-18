@@ -8,3 +8,7 @@
 settings.local.json
 
 .DS_Store
+
+# Built from plugins/hrr-memory/memory/*.usda by memory.py; the relations are the source.
+/plugins/hrr-memory/memory/fabric.sqlite3
+/plugins/hrr-memory/.venv/
