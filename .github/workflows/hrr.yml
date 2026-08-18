@@ -14,10 +14,10 @@
 # `memory.py verify` is deliberately not here, and this is the same split checks.yml
 # already makes: what a bare runner can answer for itself runs here, and what needs
 # something the runner does not have stays where that thing is. verify shells out to
-# usdcat, and OpenUSD reaches this workspace through the flow adapters rather than
-# through a pip wheel -- provisioning a second, unrelated copy of USD to satisfy a
-# runner would make CI a different machine in exactly the way the pinning above exists
-# to prevent. Run it on the desk, where the adapters are.
+# usdcat, and OpenUSD reaches this workspace through the flow adapters at
+# `6-datasource/flow` rather than through a pip wheel. Provisioning a second, unrelated
+# copy of USD to satisfy a runner would make CI a different machine in exactly the way
+# the pinning above exists to prevent. Run it on the desk, where the adapters are.
 #
 # This job never calls the network beyond installing the two pinned dependencies.
 
