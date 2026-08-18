@@ -35,6 +35,16 @@ jobs:
 
       - run: pip install -r tests/requirements.txt
 
+      # `memory.py verify` shells out to usdcat, and the whole point of that arrangement
+      # is that the validator is not ours: the emitter is hand-written, and an independent
+      # re-emit is what keeps it honest. So the runner needs the binary. `usd-core` ships
+      # it as a console script -- the module is never imported here, which is the ABI trap
+      # openusd-fabric already documents, only the executable is used.
+      #
+      # Not skipped when absent. A gate that quietly passes because its validator is
+      # missing is the silent skip this workspace refuses everywhere else.
+      - run: pip install usd-core==25.5.1
+
       - name: properties, and the controls that prove they can fail
         run: python -m pytest tests/test_hrr.py -q
 
