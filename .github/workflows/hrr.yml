@@ -43,7 +43,7 @@ jobs:
       #
       # Not skipped when absent. A gate that quietly passes because its validator is
       # missing is the silent skip this workspace refuses everywhere else.
-      - run: pip install usd-core==25.5.1
+      - run: pip install usd-core==26.8
 
       - name: properties, and the controls that prove they can fail
         run: python -m pytest tests/test_hrr.py -q
