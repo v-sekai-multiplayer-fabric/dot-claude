@@ -5,11 +5,10 @@ argument-hint: [the fact, or nothing to be asked]
 
 Record `$ARGUMENTS` in the fabric's HRR memory.
 
-Run `memory.py` from the logbook — `0-infrastructure/logbook/misc/scripts/memory.py`,
-found by climbing to the directory that holds `.repo`:
+Run `memory.py` from this plugin — `${CLAUDE_PLUGIN_ROOT}/scripts/memory.py`:
 
 ```sh
-python3 <logbook>/misc/scripts/memory.py add "<content>" --kind <kind> --entities <names...>
+python3 <plugin>/scripts/memory.py add "<content>" --kind <kind> --entities <names...>
 ```
 
 Before writing it:
@@ -29,5 +28,5 @@ Afterwards run `memory.py verify` — it must print `MEMORY VERIFY PASS` — and
 only `memory/*.usda`. `fabric.sqlite3` is derived and gitignored; committing it would
 store the same facts twice.
 
-The relations are tracked files in a repository somebody reviews, so this is a commit
-on a branch and a pull request, not a local write.
+The relations are tracked files in the `.claude` repository, which is reviewed like any
+other, so this is a commit on a branch and a pull request rather than a local write.

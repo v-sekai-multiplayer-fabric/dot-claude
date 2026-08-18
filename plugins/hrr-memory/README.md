@@ -1,12 +1,12 @@
 # hrr-memory
 
-The memory in `infrastructure-logbook` is a set of ETNF relations in OpenUSD layers,
-queried by phase cosine similarity over HRR vectors. It already had `memory.py`. What it
-did not have was anything that read it without being asked, so a fact recorded on Monday
-was only recalled if somebody remembered it was there — which is the one thing memory is
-for.
+A set of ETNF relations in OpenUSD layers, queried by phase cosine similarity over HRR
+vectors, plus the two things that were missing: something that reads it without being
+asked, and a gate over the algebra it depends on.
 
-This plugin closes that. It is two pieces and neither holds any memory of its own.
+The store lives here. It was in `infrastructure-logbook`, which meant the memory was
+split across two repositories and only worked inside a synced workspace. One store, in
+the agent configuration, which is what reads it.
 
 ## What it does
 
@@ -42,12 +42,15 @@ in them to match on. A hook that speaks every turn is one nobody reads by the fo
 **It does not present memories as instructions.** What it prints says so: background, true
 when written, verify any file, flag or number before relying on it.
 
-## How it finds the memory
+## Layout
 
-By climbing to the directory that holds `.repo`, which is how every project in this
-workspace finds anything, and how `Check.Lib.workspace_root` already does it. No path is
-configured here and none is hardcoded, so the plugin works from any checkout and is silent
-outside a synced workspace.
+    memory/      the relations -- the source, and the only thing committed
+    scripts/     hrr.py (the algebra), memory.py (the store), recall.py (the hook)
+    tests/       the algebra's properties, and a control for each
+    commands/    /remember
+
+`CLAUDE_PLUGIN_ROOT` locates it, falling back to the script's own parent so it stays
+runnable by hand. Nothing climbs for `.repo` any more and no path is configured.
 
 The SQLite index is derived and gitignored. The hook rebuilds it when it is missing or
 older than any `.usda` beside it — about a second — and otherwise leaves it alone. A stale
@@ -64,3 +67,21 @@ comparison is the point rather than an optimisation.
 Measured on the 16 relations present when this was written: rebuild 1.2 s, warm recall
 144 ms. The floor is set where it is because scores run about 0.25 for a direct hit and
 0.07 for an unrelated one; 0.10 keeps the second kind out.
+
+## The gate
+
+`tests/test_hrr.py` states `hrr.py`'s prose claims as properties over all inputs, and pairs
+each with a control that breaks one thing and asserts the property goes red. Twenty-nine
+run in about two seconds; CI is `.github/workflows/hrr.yml`.
+
+Writing the controls was worth more than writing the properties. Two of the first ones did
+not break their properties: a truncating quantiser still gave order-independent bundles,
+and a stranger never beat a member at dim 2. Both were the control being wrong rather than
+the code being right — and a control that passes without breaking anything is exactly the
+green nobody should trust.
+
+One finding fell out of it. `hrr.py` says bundling is order-sensitive at the bit level and
+that the vectors "agree to 1e-14 radians either way". Reversing the components was measured
+at **exactly 0.0** difference for every n and dimension tried, so the note is conservative.
+The property is stated at the documented tolerance anyway, because the claim is what is
+being gated, not the measurement of the day.
