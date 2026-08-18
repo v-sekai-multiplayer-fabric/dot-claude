@@ -1,0 +1,14 @@
+{
+  "name": "fabric",
+  "owner": {
+    "name": "V-Sekai multiplayer fabric",
+    "url": "https://github.com/v-sekai-multiplayer-fabric"
+  },
+  "plugins": [
+    {
+      "name": "hrr-memory",
+      "source": "./plugins/hrr-memory",
+      "description": "Recall from the fabric's HRR memory before each prompt, and write to it with /remember."
+    }
+  ]
+}
