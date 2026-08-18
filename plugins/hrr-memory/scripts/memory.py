@@ -50,10 +50,23 @@ RELATIONS = ("kinds", "entities", "memory", "memory_entity")
 VARIANT = {
     "kinds": {"kind_id": 20, "name": 16},
     "entities": {"entity_id": 20, "name": 16},
-    "memory": {"memory_id": 20, "kind_id": 20, "content": 16, "created": 11},
+    # `recorded` is the instant and `utc_offset` is the offset it was observed at. The two are
+    # independent -- neither can be computed from the other -- and everything anybody wants
+    # from a timestamp derives from the pair: the civil local time, its date, the day of the
+    # week. `created` used to sit here as a date beside them and was removed for exactly that
+    # reason. A date that is a function of a column already present is a second source of
+    # truth for one fact, and the two disagree the first time one is edited and the other is
+    # not. It is now computed where it is needed, which is `tuple_id`.
+    #
+    # Variant type 12 is UTC-normalised: it stores micros since the epoch and has nowhere to
+    # put an offset. That is the whole reason the offset is its own column rather than being
+    # carried inside an RFC 3339 string -- encoding "…-07:00" as a 12 and reading it back
+    # gives the same instant spelled in UTC, so the offset would be silently dropped by the
+    # very check that is supposed to prove nothing was lost.
+    "memory": {"memory_id": 20, "kind_id": 20, "content": 16, "recorded": 12, "utc_offset": 16},
     "memory_entity": {"memory_id": 20, "entity_id": 20},
 }
-VARIANT_NAMES = {11: "date", 16: "string", 20: "uuid"}
+VARIANT_NAMES = {11: "date", 12: "timestamp", 16: "string", 20: "uuid"}
 
 SORT_KEYS = {
     "kinds": ("kind_id",),
@@ -72,7 +85,11 @@ CREATE TABLE IF NOT EXISTS memory (
   entities TEXT NOT NULL,
   dim      INT  NOT NULL,
   vec      BLOB NOT NULL,
-  created  TEXT NOT NULL
+  recorded   TEXT NOT NULL,
+  utc_offset TEXT NOT NULL,
+  -- Derived from the two above by civil_date. Present because queries want a date and
+  -- absent from the layers for the same reason: there, it would be a second source of truth.
+  created    TEXT NOT NULL
 );
 -- What produced the vectors, so a reader can tell whether they are still valid.
 CREATE TABLE IF NOT EXISTS provenance (
@@ -90,6 +107,25 @@ def connect(path=DB):
         con = sqlite3.connect(path)      # no store-plane VFS registered here
     con.executescript(SCHEMA)
     return con
+
+
+def civil_date(recorded, utc_offset):
+    """The calendar date the instant fell on where it was recorded.
+
+    This is the derivation that lets `created` stop being stored. A date is what `tuple_id`
+    wants and what a reader asks for, and it is a function of the pair rather than a fact of
+    its own -- the same instant is two different dates either side of a date line, which is
+    exactly why the offset has to be part of the derivation rather than assumed to be UTC.
+    """
+    tz = datetime.datetime.strptime(utc_offset, "%z").tzinfo
+    return datetime.datetime.fromisoformat(recorded).astimezone(tz).date().isoformat()
+
+
+def now_recorded():
+    """The instant, and the offset this desk is keeping civil time at, as a pair."""
+    now = datetime.datetime.now().astimezone()
+    return (now.astimezone(datetime.timezone.utc).isoformat(timespec="microseconds"),
+            now.strftime("%z")[:3] + ":" + now.strftime("%z")[3:])
 
 
 def tuple_id(kind, key, created):
@@ -132,9 +168,10 @@ def variant_encode(type_id, value):
 
     Only the three this data uses are implemented, each exactly as the spec states it:
 
-      11  date    4 byte little-endian, days since 1970-01-01
-      16  string  4 byte little-endian size, then UTF-8 bytes
-      20  uuid    16 bytes, big-endian
+      11  date       4 byte little-endian, days since 1970-01-01
+      12  timestamp  8 byte little-endian, micros since 1970-01-01T00:00:00Z, UTC-normalised
+      16  string     4 byte little-endian size, then UTF-8 bytes
+      20  uuid       16 bytes, big-endian
 
     Raising is the point. An encoder that quietly accepts whatever it is handed cannot tell
     a date from a string that resembles one, which is the ambiguity JSON introduces and the
@@ -143,6 +180,12 @@ def variant_encode(type_id, value):
     if type_id == 11:
         days = (datetime.date.fromisoformat(value) - datetime.date(1970, 1, 1)).days
         return days.to_bytes(4, "little", signed=True)
+    if type_id == 12:
+        t = datetime.datetime.fromisoformat(value)
+        if t.tzinfo is None:
+            raise ValueError(f"{value!r} has no offset; a type 12 is a point in time")
+        micros = round(t.timestamp() * 1_000_000)
+        return micros.to_bytes(8, "little", signed=True)
     if type_id == 16:
         b = value.encode("utf-8")
         return len(b).to_bytes(4, "little") + b
@@ -156,6 +199,10 @@ def variant_decode(type_id, blob):
     if type_id == 11:
         return (datetime.date(1970, 1, 1)
                 + datetime.timedelta(days=int.from_bytes(blob, "little", signed=True))).isoformat()
+    if type_id == 12:
+        micros = int.from_bytes(blob, "little", signed=True)
+        return datetime.datetime.fromtimestamp(
+            micros / 1_000_000, datetime.timezone.utc).isoformat(timespec="microseconds")
     if type_id == 16:
         n = int.from_bytes(blob[:4], "little")
         return blob[4:4 + n].decode("utf-8")
@@ -297,10 +344,14 @@ def build(con):
     for r in rel["memory"]:
         ents = sorted(by_mem.get(r["memory_id"], []))
         vec = hrr.encode_fact(r["content"], ents)
-        con.execute("INSERT INTO memory(id, kind, content, entities, dim, vec, created)"
-                    " VALUES (?,?,?,?,?,?,?)",
-                    (r["memory_id"], kind[r["kind_id"]], r["content"], " ".join(ents),
-                     hrr.DIM, hrr.phases_to_u16(vec), r["created"]))
+        con.execute(
+            "INSERT INTO memory(id, kind, content, entities, dim, vec, recorded,"
+            " utc_offset, created) VALUES (?,?,?,?,?,?,?,?,?)",
+            (r["memory_id"], kind[r["kind_id"]], r["content"], " ".join(ents),
+             hrr.DIM, hrr.phases_to_u16(vec), r["recorded"], r["utc_offset"],
+             # Derived, and only here. The index may hold a computed column because it is
+             # rebuilt from the layers on every build; the layers may not.
+             civil_date(r["recorded"], r["utc_offset"])))
     con.commit()
     return len(rel["memory"])
 
@@ -309,13 +360,15 @@ def add(con, content, kind, entities):
     if kind not in KINDS:
         raise SystemExit(f"kind must be one of {KINDS}")
     rel = _read_relations()
-    today = datetime.date.today().isoformat()
+    recorded, utc_offset = now_recorded()
+    today = civil_date(recorded, utc_offset)
     # Kinds and entities take the store's own first date rather than today's, because that is
     # the date `verify` re-derives them from. Stamping them with today instead passes on the
     # day the store is created -- when the two dates are the same -- and fails for every
     # entity coined afterwards, which is a gate that only goes red on the second day of use.
     # The name's hash is unaffected either way: only the 48-bit date prefix moved.
-    first = min((r["created"] for r in rel["memory"]), default=today)
+    first = min((civil_date(r["recorded"], r["utc_offset"]) for r in rel["memory"]),
+                default=today)
     if kind not in {r["name"] for r in rel["kinds"]}:
         rel["kinds"].append({"kind_id": tuple_id("kind", kind, first), "name": kind})
     kid = {r["name"]: r["kind_id"] for r in rel["kinds"]}[kind]
@@ -325,7 +378,7 @@ def add(con, content, kind, entities):
     eid = {r["name"]: r["entity_id"] for r in rel["entities"]}
     mid = tuple_id("memory", content, today)
     rel["memory"].append({"memory_id": mid, "kind_id": kid, "content": content,
-                          "created": today})
+                          "recorded": recorded, "utc_offset": utc_offset})
     for e in entities:
         rel["memory_entity"].append({"memory_id": mid, "entity_id": eid[e]})
     _write_relations(rel)
@@ -417,7 +470,7 @@ def verify(con):
     if bad:
         print(f"{bad} rows wrong")
         return bad
-    first = min(r["created"] for r in rel["memory"])
+    first = min(civil_date(r["recorded"], r["utc_offset"]) for r in rel["memory"])
     for r in rel["kinds"]:
         if r["kind_id"] != tuple_id("kind", r["name"], first):
             print(f"  kind {r['name']}: id does not derive from its tuple"); bad += 1
@@ -425,7 +478,8 @@ def verify(con):
         if r["entity_id"] != tuple_id("entity", r["name"], first):
             print(f"  entity {r['name']}: id does not derive from its tuple"); bad += 1
     for r in rel["memory"]:
-        if r["memory_id"] != tuple_id("memory", r["content"], r["created"]):
+        if r["memory_id"] != tuple_id("memory", r["content"],
+                                      civil_date(r["recorded"], r["utc_offset"])):
             print(f"  memory {r['memory_id']}: id does not derive from its tuple"); bad += 1
     for mid, content, ents, dim, blob in con.execute(
             "SELECT id, content, entities, dim, vec FROM memory"):
