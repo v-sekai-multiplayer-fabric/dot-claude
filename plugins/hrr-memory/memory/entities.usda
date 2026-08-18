@@ -26,6 +26,9 @@
             dictionary "01a007de-3c00-88e7-8b3a-6b71da6bb38a" = {
                 string name = "checks"
             }
+            dictionary "01a007de-3c00-88f3-a4cd-f4e0f6bb964d" = {
+                string name = "claude-code"
+            }
             dictionary "01a007de-3c00-89ff-b82c-f81fd829eff8" = {
                 string name = "repo"
             }
@@ -43,6 +46,9 @@
             }
             dictionary "01a007de-3c00-8f28-b8f4-b576523c5942" = {
                 string name = "gall"
+            }
+            dictionary "01a007de-3c00-8f2d-bef5-810396892e6e" = {
+                string name = "permissions"
             }
             dictionary "01a007de-3c00-8f62-9988-0fe84d01680a" = {
                 string name = "planner"
