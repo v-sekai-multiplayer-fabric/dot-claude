@@ -4,19 +4,26 @@ The agent configuration for this workspace, as a repository. Checked out at `.cl
 
 ```sh
 repo sync .claude
-claude plugin marketplace add ./.claude
 ```
 
-The second line is not optional and is easy to miss. `settings.json` enables
-`hrr-memory@fabric`, and the marketplace it names is declared here in
-`.claude-plugin/marketplace.json` — but registering it is per-desk, kept in user settings
-rather than in this repository. Without it Claude Code cannot resolve `@fabric` and reports
-the failure against `plugins/hrr-memory/.claude-plugin/plugin.json`, which parses fine and
-passes `claude plugin validate`. The file it names is not the file that is wrong.
+The plugins are not here. They live in the private `fire/agent-plugins`, which is its own
+marketplace and is not a manifest project, so nothing syncs it and a `repo sync` removes a
+clone left at `plugins/`:
+
+```sh
+claude plugin marketplace add fire/agent-plugins
+```
+
+Registering a marketplace is per-desk: it is kept in user settings, not in any repository
+here, so a fresh checkout has none. When one is missing Claude Code reports the failure
+against the plugin's `plugin.json`, which parses fine and passes `claude plugin validate` —
+the file it names is not the file that is wrong.
 
 | | |
 |---|---|
 | `settings.json` | the workspace's settings: tracked, shared, reviewed |
+| `plugins/hrr-memory` | the fabric's memory: recall on every prompt, `/remember` to write |
+| `plugins/ledger` | the hours, booked from git: `/ledger:report`, `:path`, `:build`, `:verify` |
 | `settings.local.json` | one desk's answers. Gitignored, and stays that way |
 | `CLAUDE.md` | what this repository is, and the rule for adding a permission |
 

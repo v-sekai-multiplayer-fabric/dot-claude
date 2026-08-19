@@ -1,4 +1,0 @@
-# Pinned so a red run here is a red run on the desk, not a version question --
-# the same reason checks.yml pins Elixir and OTP.
-hypothesis==6.165.10
-pytest==9.1.1

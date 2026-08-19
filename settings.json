@@ -4,9 +4,6 @@
     "pr": "",
     "sessionUrl": false
   },
-  "enabledPlugins": {
-    "hrr-memory@fabric": true
-  },
   "permissions": {
     "allow": [
       "Bash(ps -Ao pid,args)",
