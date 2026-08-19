@@ -13,3 +13,7 @@ settings.local.json
 /plugins/hrr-memory/memory/fabric.sqlite3
 /plugins/hrr-memory/.venv/
 __pycache__
+
+# The plugins live in fire/agent-plugins, cloned here by hand when wanted.
+# Not a manifest project: repo does not manage this path and a sync will remove it.
+plugins/
