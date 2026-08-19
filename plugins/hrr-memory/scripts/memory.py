@@ -385,6 +385,47 @@ def add(con, content, kind, entities):
     build(con)
 
 
+def edit(con, match, content):
+    """Rewrite one memory's content, and everything that derives from it.
+
+    Correcting a memory by hand is four steps and three of them are invisible until a gate
+    fails. memory_id is tuple_id(content, date), so new words mean a new id; the dictionary
+    key in memory.usda is that id; every memory_entity edge points at it; and the relations
+    are sorted, so the new id belongs somewhere else in the file. Doing that by hand on
+    2026-08-19 failed twice -- once on the derivation, once on canonical ordering -- and each
+    failure was a separate round trip through verify.
+
+    They are one operation because they are one change. The date is not restamped: the fact
+    was recorded when it was recorded, and a correction is not a new observation.
+    """
+    rel = _read_relations()
+    hits = [r for r in rel["memory"]
+            if r["memory_id"].startswith(match) or match.lower() in r["content"].lower()]
+    if not hits:
+        raise SystemExit(f"no memory matches {match!r}")
+    if len(hits) > 1:
+        for r in hits:
+            print(f"  {r['memory_id']}  {r['content'][:70]}")
+        raise SystemExit(f"{len(hits)} memories match {match!r}; give an id prefix")
+
+    row = hits[0]
+    old_id = row["memory_id"]
+    new_id = tuple_id("memory", content, civil_date(row["recorded"], row["utc_offset"]))
+    if new_id == old_id:
+        print("content is unchanged; nothing to do")
+        return
+    row["content"] = content
+    row["memory_id"] = new_id
+    moved = 0
+    for e in rel["memory_entity"]:
+        if e["memory_id"] == old_id:
+            e["memory_id"] = new_id
+            moved += 1
+    _write_relations(rel)
+    build(con)
+    print(f"edited {old_id} -> {new_id}, {moved} edge(s) followed")
+
+
 def recall(con, query, n=5):
     q = hrr.encode_text(query)
     rows = []
@@ -496,6 +537,7 @@ def main():
     p = argparse.ArgumentParser(description=__doc__)
     sub = p.add_subparsers(dest="cmd", required=True)
     a = sub.add_parser("add");    a.add_argument("content"); a.add_argument("--kind", required=True); a.add_argument("--entities", nargs="*", default=[])
+    e = sub.add_parser("edit");   e.add_argument("match", help="memory id prefix, or text it contains"); e.add_argument("--content", required=True)
     r = sub.add_parser("recall"); r.add_argument("query");   r.add_argument("-n", type=int, default=5)
     sub.add_parser("verify"); sub.add_parser("build")
     args = p.parse_args()
@@ -504,6 +546,8 @@ def main():
         print(f"built {build(con)} memories into {DB.name}")
     elif args.cmd == "add":
         add(con, args.content, args.kind, args.entities); print("stored")
+    elif args.cmd == "edit":
+        edit(con, args.match, args.content)
     elif args.cmd == "recall":
         for s, mid, kind, content, ents in recall(con, args.query, args.n):
             print(f"  {s:+.4f}  [{kind}] {content}" + (f"  ({ents})" if ents else ""))

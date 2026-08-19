@@ -6,5 +6,11 @@
   },
   "enabledPlugins": {
     "hrr-memory@fabric": true
+  },
+  "permissions": {
+    "allow": [
+      "Bash(ps -Ao pid,args)",
+      "Bash(ps -Ao args)"
+    ]
   }
 }
