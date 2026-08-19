@@ -8,3 +8,14 @@
 settings.local.json
 .DS_Store
 __pycache__
+
+# The plugins are their own repository now -- fire/agent-plugins, private, checked out here
+# at the path Claude Code reads. Two different kinds of thing were in one repository: this
+# one is settings and permissions, reviewed by everyone who works here, and that one is code
+# with a memory store in it recording what an agent has learned about the work.
+#
+# A nested checkout is untracked from this repository's point of view, and `repo` permits the
+# nesting -- _CheckLocalPath validates a path in isolation and has no overlap rule. Ignoring
+# it is what keeps `git status` here answering about the configuration rather than reporting
+# somebody else's repository as a pile of new files.
+plugins/
