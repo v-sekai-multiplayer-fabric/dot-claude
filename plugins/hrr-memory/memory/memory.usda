@@ -140,6 +140,24 @@
                 string recorded = "2026-08-17T07:00:00.000000+00:00"
                 string utc_offset = "-07:00"
             }
+            dictionary "01a01751-5000-80f3-9b17-81dc9ab20c81" = {
+                string content = "OpenUSD is the memory's format because its text serialisation is one git can diff and a language model can read, not because pxr is used: nothing here imports it. The parquet and JSON Lines arguments this replaced are settled and their memories are stale."
+                string kind_id = "01a007de-3c00-86ae-be56-929a3d37164b"
+                string recorded = "2026-08-19T11:34:37.128711+00:00"
+                string utc_offset = "-07:00"
+            }
+            dictionary "01a01751-5000-834d-833c-0e48b05ddc1b" = {
+                string content = "The HRR recall algorithm comes from the Hermes Agent and is treated with the distrust that implies: a recalled memory is a claim to verify against the tree, never a fact to act on. The recall hook says so on every prompt, and an audit on 2026-08-19 found five of twenty-three memories stale or contradicted."
+                string kind_id = "01a007de-3c00-8163-b745-d323809ca89e"
+                string recorded = "2026-08-19T11:34:39.008071+00:00"
+                string utc_offset = "-07:00"
+            }
+            dictionary "01a01751-5000-855e-abf6-07a1c424b9eb" = {
+                string content = "Automerge only where all three hold: the repository runs CI, we own it authoritatively, and it is not an unauthorised fork. A repository with no CI has nothing to gate the merge, so automerge there is a merge nobody checked."
+                string kind_id = "01a007de-3c00-8163-b745-d323809ca89e"
+                string recorded = "2026-08-19T11:34:27.632034+00:00"
+                string utc_offset = "-07:00"
+            }
         }
     }
 )
