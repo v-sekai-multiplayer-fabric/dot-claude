@@ -1,5 +1,10 @@
 # hrr-memory
 
+Built by the **Hermes Agent**, which is where the ETNF normalisation this store is shaped by
+comes from: intern the repeated text, decompose optional attributes into satellite relations
+so there are no NULLs, and split observation facts from entity facts. `plugin.json` names it
+as the author, because attribution belongs in the manifest rather than only in prose.
+
 A set of ETNF relations in OpenUSD layers, queried by phase cosine similarity over HRR
 vectors, plus the two things that were missing: something that reads it without being
 asked, and a gate over the algebra it depends on.

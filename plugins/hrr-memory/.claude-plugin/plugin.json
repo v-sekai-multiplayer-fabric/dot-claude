@@ -1,5 +1,9 @@
 {
   "name": "hrr-memory",
   "description": "Recall from the fabric's HRR memory before each prompt, and write to it with /remember.",
-  "version": "0.1.0"
+  "version": "0.1.0",
+  "author": {
+    "name": "Hermes Agent"
+  },
+  "homepage": "https://github.com/v-sekai-multiplayer-fabric/dot-claude"
 }
