@@ -9,6 +9,11 @@
       "name": "hrr-memory",
       "source": "./plugins/hrr-memory",
       "description": "Recall from the fabric's HRR memory before each prompt, and write to it with /remember."
+    },
+    {
+      "name": "ledger",
+      "source": "./plugins/ledger",
+      "description": "The workspace's hours, booked from git and validated by tackler: /ledger:report, :path, :build, :verify."
     }
   ]
 }

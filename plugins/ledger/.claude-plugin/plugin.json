@@ -1,0 +1,9 @@
+{
+  "name": "ledger",
+  "description": "The workspace's hours, booked from git and validated by tackler: /ledger:report, :path, :build, :verify.",
+  "version": "0.1.0",
+  "author": {
+    "name": "Hermes Agent"
+  },
+  "homepage": "https://github.com/v-sekai-multiplayer-fabric/dot-claude"
+}

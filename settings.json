@@ -5,7 +5,8 @@
     "sessionUrl": false
   },
   "enabledPlugins": {
-    "hrr-memory@fabric": true
+    "hrr-memory@fabric": true,
+    "ledger@fabric": true
   },
   "permissions": {
     "allow": [
